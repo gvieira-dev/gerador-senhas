@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Senhas</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="ceu" id="ceu"></div>
+  <button id="btnTema" class="btn-tema" type="button" aria-label="Alternar tema"></button>
+
+  <main class="page">
+    <section class="gerador">
+
+      <header class="topo">
+        <h1>Gerador de senhas VPN</h1>
+        <p>Crie senhas fortes e seguras em segundos.</p>
+      </header>
+
+      <div class="resultado">
+        <input type="text" id="senha" readonly placeholder="Sua senha" aria-label="Senha gerada">
+        <button id="btnCopiar" class="btn-copiar" type="button">Copiar</button>
+      </div>
+      <small id="msgCopiado" class="msg-copiado invisible">Senha copiada!</small>
+
+      <div class="campo">
+        <div class="campo-linha">
+          <label for="tamanho">Tamanho</label>
+          <span id="valorTamanho" class="valor">12</span>
+        </div>
+        <input type="range" id="tamanho" min="4" max="64" value="12">
+      </div>
+
+      <label class="opcao" for="maiusculas">
+        <span class="opcao-texto">
+          Letras maiúsculas
+          <small>A–Z</small>
+        </span>
+        <input type="checkbox" id="maiusculas" class="toggle" checked>
+      </label>
+
+      <label class="opcao" for="especiais">
+        <span class="opcao-texto">
+          Caracteres especiais
+          <small>!@#$%&*</small>
+        </span>
+        <input type="checkbox" id="especiais" class="toggle" checked>
+      </label>
+
+      <button id="btnGerar" class="btn-gerar" type="button">Gerar nova senha</button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
