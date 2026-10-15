@@ -12,6 +12,22 @@ const btnGerar = document.getElementById("btnGerar");
 const btnCopiar = document.getElementById("btnCopiar");
 const msgCopiado = document.getElementById("msgCopiado");
 
+function lerArmazenamento(chave) {
+  try {
+    return localStorage.getItem(chave);
+  } catch {
+    return null;
+  }
+}
+
+function salvarArmazenamento(chave, valor) {
+  try {
+    localStorage.setItem(chave, valor);
+  } catch {
+    // O gerador continua funcionando mesmo sem acesso ao armazenamento.
+  }
+}
+
 function atualizarPreenchimento() {
   const min = Number(inputTamanho.min);
   const max = Number(inputTamanho.max);
@@ -62,6 +78,24 @@ function gerarSenha() {
 
   campoSenha.value = embaralhar(senha).join("");
   msgCopiado.classList.add("invisible");
+  salvarArmazenamento("senhaGerada", campoSenha.value);
+}
+
+function senhaSalvaValida(senha) {
+  if (typeof senha !== "string" || senha.length !== Number(inputTamanho.value)) {
+    return false;
+  }
+
+  const grupos = [MINUSCULAS, NUMEROS];
+  if (chkMaiusculas.checked) grupos.push(MAIUSCULAS);
+  if (chkEspeciais.checked) grupos.push(ESPECIAIS);
+
+  const permitidos = new Set(grupos.join(""));
+  if ([...senha].some(caractere => !permitidos.has(caractere))) {
+    return false;
+  }
+
+  return grupos.every(grupo => [...senha].some(caractere => grupo.includes(caractere)));
 }
 
 async function copiarSenha() {
@@ -78,20 +112,62 @@ async function copiarSenha() {
   setTimeout(() => msgCopiado.classList.add("invisible"), 2000);
 }
 
+function inicializarGerador() {
+  const tamanhoPadrao = Number(inputTamanho.value);
+  const valoresSalvos = {
+    senha: lerArmazenamento("senhaGerada"),
+    tamanho: lerArmazenamento("tamanhoSenha"),
+    maiusculas: lerArmazenamento("usarMaiusculas"),
+    especiais: lerArmazenamento("usarEspeciais")
+  };
+  const tamanhoValidado = valoresSalvos.tamanho !== null && /^\d+$/.test(valoresSalvos.tamanho)
+    ? Number(valoresSalvos.tamanho)
+    : NaN;
+  const min = Number(inputTamanho.min);
+  const max = Number(inputTamanho.max);
+
+  inputTamanho.value = Number.isInteger(tamanhoValidado) &&
+    tamanhoValidado >= min &&
+    tamanhoValidado <= max
+    ? String(tamanhoValidado)
+    : String(tamanhoPadrao);
+
+  if (valoresSalvos.maiusculas === "true" || valoresSalvos.maiusculas === "false") {
+    chkMaiusculas.checked = valoresSalvos.maiusculas === "true";
+  }
+  if (valoresSalvos.especiais === "true" || valoresSalvos.especiais === "false") {
+    chkEspeciais.checked = valoresSalvos.especiais === "true";
+  }
+
+  valorTamanho.textContent = inputTamanho.value;
+  atualizarPreenchimento();
+
+  if (senhaSalvaValida(valoresSalvos.senha)) {
+    campoSenha.value = valoresSalvos.senha;
+  } else {
+    gerarSenha();
+  }
+}
+
+inicializarGerador();
+
 inputTamanho.addEventListener("input", () => {
   valorTamanho.textContent = inputTamanho.value;
   atualizarPreenchimento();
+  salvarArmazenamento("tamanhoSenha", inputTamanho.value);
   gerarSenha();
 });
 
-chkMaiusculas.addEventListener("change", gerarSenha);
-chkEspeciais.addEventListener("change", gerarSenha);
+chkMaiusculas.addEventListener("change", () => {
+  salvarArmazenamento("usarMaiusculas", String(chkMaiusculas.checked));
+  gerarSenha();
+});
+chkEspeciais.addEventListener("change", () => {
+  salvarArmazenamento("usarEspeciais", String(chkEspeciais.checked));
+  gerarSenha();
+});
 btnGerar.addEventListener("click", gerarSenha);
 btnCopiar.addEventListener("click", copiarSenha);
-
-// Gera uma senha ao abrir a página
-atualizarPreenchimento();
-gerarSenha();
 
 
 // Background estrelas e estrelas cadentes 
@@ -144,7 +220,7 @@ const btnTema = document.getElementById("btnTema");
 function aplicarTema(tema) {
   document.documentElement.setAttribute("data-theme", tema);
   btnTema.textContent = tema === "dark" ? "☀️" : "🌙";
-  try { localStorage.setItem("tema", tema); } catch {}
+  salvarArmazenamento("tema", tema);
 }
 
 btnTema.addEventListener("click", () => {
@@ -153,8 +229,7 @@ btnTema.addEventListener("click", () => {
 });
 
 // Tema inicial: o salvo, ou o do sistema
-let temaInicial = null;
-try { temaInicial = localStorage.getItem("tema"); } catch {}
+let temaInicial = lerArmazenamento("tema");
 if (!temaInicial) {
   temaInicial = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
